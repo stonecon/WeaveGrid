@@ -1,4 +1,3 @@
-<script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
 $(".swiper").append(`<div class="swiper-arrow button-prev"></div>`);
 $(".swiper").append(`<div class="swiper-arrow button-next"></div>`);
 const swiper1 = new Swiper(".swiper1", {
