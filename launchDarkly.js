@@ -1,4 +1,4 @@
-< script src = "<https://unpkg.com/launchdarkly-js-client-sdk@3.1.3/dist/ldclient.min.js>" > </script>
+<script src = "<https://unpkg.com/launchdarkly-js-client-sdk@3.1.3/dist/ldclient.min.js>"> </script>
 
 // Initialize LaunchDarkly
 // const client = LDClient.initialize('60271ef7e478340b6c32cd80', {
@@ -67,7 +67,7 @@ function initializeTests() {
     if (err) return;
     const buttons = document.querySelectorAll('.chargeperks-cta-button');
     const buttonTexts = {
-      'A': 'Original Text', // Replace with actual original
+      'A': 'ENROLL NOW', // actual original
       'B': 'RESERVE SPOT',
       'C': 'GET STARTED',
       'D': 'START EARNING'
@@ -93,7 +93,7 @@ function initializeTests() {
     if (err) return;
     const banner = document.querySelector('.chargeperks-banner-text');
     const messages = {
-      'A': 'Original Banner Text', // Replace with actual original
+      'A': 'Plug in everyday at home and receive hassle-free Automatic Smart Charging. WeaveGrid will automatically handle your charging using your TOU rate to determine lowest cost times and prioritizing renewable energy when available. You can always override smart charge schedules.', // original
       'B': 'Harness the power of your EV to support California`s electric grid during periods of high demand',
       'C': 'ChargePerks California is available to drivers in select PG&E, SCE, LADWP, SDG&E and SMUD zip codes. Reserve your spot today!'
     };
