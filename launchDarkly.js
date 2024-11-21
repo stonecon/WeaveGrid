@@ -1,5 +1,5 @@
 const LD_CONFIG = {
-  clientId: '6026d6b36f9bd00b01ba8705', // Replace with your LaunchDarkly client-side ID
+  clientId: '6026d6b36f9bd00b01ba8705', // LaunchDarkly client-side ID
   debugEnabled: true,
   flags: {
     'chargeperk-hero-headline': true,
@@ -11,7 +11,7 @@ const LD_CONFIG = {
   }
 };
 
-// Track Manager
+// Track Manager - Controls tracking events sent to LaunchDarkly
 class TrackManager {
   static track(eventName, data = {}) {
     if (!window.ldclient) return;
@@ -56,7 +56,7 @@ class TrackManager {
   }
 }
 
-// Test Manager
+// Test Manager - Controls the various tests and what they do
 class TestManager {
   static elementCache = new Map();
 
@@ -116,8 +116,12 @@ class TestManager {
     const flags = window.ldclient.allFlags();
     console.log('🚩 Implementing Tests with Flags:', flags);
 
+    // TESTS START HERE
+
     // 1. Hero Headline Test
     if (flags['chargeperk-hero-headline'] === false) {
+      // Checks if the chargeperk-hero-headline flag is set to variation (false)
+      // if so, updates the text
       console.log('🔍 Hero Headline Flag Enabled, Applying Test');
       const result = this.updateElement('chargeperk-hero-headline', {
         text: 'Get $50 when you join ChargePerks'
@@ -132,8 +136,10 @@ class TestManager {
       console.log('🔕 Hero Headline Flag Not Enabled');
     }
 
-    // 2. Hero Media Test classList.add('hide')
+    // 2. Hero Media Test
     if (flags['chargeperk-hero-media'] === false) {
+      // if the chargeperk-hero-media flag is set to variation (false) 
+      // if so, hides the image and shows embedded video
       const imageElement = document.querySelector('#chargeperk-hero-image');
       if (imageElement) {
         imageElement.classList.add('hide');
@@ -151,8 +157,10 @@ class TestManager {
       });
     }
 
-    // CTA Button Test
+    // 3. CTA Button Test
     const ctaVariation = flags['chargeperk-cta-text'];
+    // Checks which variation (A is control) chargeperk-cta-text is set to
+    // Based upon flag updates the button text accordingly
     if (ctaVariation !== 'A') {
       const ctaTexts = {
         'B': 'RESERVE SPOT',
@@ -171,7 +179,7 @@ class TestManager {
         });
       }
 
-      // Update all buttons with the class 'button' except the "Sign in" button
+      // Updates all buttons with the class 'button' except the "Sign in" button
       document.querySelectorAll('.button').forEach(button => {
         if (!button.classList.contains('cpc') && button.textContent !== 'Sign in') {
           const originalText = button.textContent;
@@ -186,6 +194,8 @@ class TestManager {
 
     // 4. Banner Message Test
     const bannerVariation = flags['chargeperk-banner-message'];
+    // Checks which variation (A is control) chargeperk-banner-message is set to 
+    // Based upon flag updates the banner text accordingly
     if (bannerVariation !== 'A') {
       const bannerTexts = {
         'B': "Harness the power of your EV to support California's electric grid during periods of high demand",
@@ -207,6 +217,8 @@ class TestManager {
 
     // 5. Program Links Destination Test
     if (flags['program-destination'] === false) {
+      // Checks if the program-destination flag is set to variation (false)
+      // if so, updates all links to the programs’ signup flow page
       const programLinks = {
         'Alabama Power': 'https://charge.weavegrid.com/alabamapower/',
         'Atlantic City Electric': 'https://charge.weavegrid.com/ace/',
@@ -252,8 +264,9 @@ class TestManager {
 
     // 6. Section Layout Test
     if (flags['section-layout'] === false) {
-      // Hide original sections
-      ['1', '2'].forEach(num => {
+      // Checks if the section-layout flag is set to variation (false)
+      // if so, swaps order of both sections through hiding and unhiding
+      ['1', '2'].forEach(num => { // Hide original sections
         const element = document.querySelector(`#section-layout-${num}`);
         if (element) {
           element.classList.add('hide');
@@ -263,9 +276,7 @@ class TestManager {
           });
         }
       });
-
-      // Show reordered sections
-      ['1', '2'].forEach(num => {
+      ['1', '2'].forEach(num => { // Show reordered sections
         const element = document.querySelector(`#section-reordered-${num}`);
         if (element) {
           element.classList.remove('hide');
@@ -464,4 +475,11 @@ window.LDDebug = {
   }
 };
 
-window.initLDTests();
+const validPaths = ['/chargeperks', '/drivers'];
+const currentPath = window.location.pathname;
+
+// Checks to make sure the tests only run on pages we want it to
+// Currently /chargeperks and /drivers landing page
+if (validPaths.includes(currentPath)) {
+  window.initLDTests();
+}
