@@ -14,7 +14,7 @@ const LD_CONFIG = {
 // Track Manager
 class TrackManager {
   static track(eventName, data = {}) {
-    if (!window.ldclient || isWebflowEditor()) return;
+    if (!window.ldclient) return;
 
     const baseData = {
       timestamp: new Date().toISOString(),
@@ -112,7 +112,6 @@ class TestManager {
   }
 
   static implementTests() {
-    if (isWebflowEditor()) return;
 
     const flags = window.ldclient.allFlags();
     console.log('🚩 Implementing Tests with Flags:', flags);
@@ -146,7 +145,7 @@ class TestManager {
       });
     }
 
-    // 3. CTA Button Test
+    // CTA Button Test
     const ctaVariation = flags['chargeperk-cta-text'];
     if (ctaVariation !== 'A') {
       const ctaTexts = {
@@ -154,6 +153,8 @@ class TestManager {
         'C': 'GET STARTED',
         'D': 'START EARNING'
       };
+
+      // Update specific button with ID 'chargeperk-cta-button' if it exists
       const result = this.updateElement('chargeperk-cta-button', {
         text: ctaTexts[ctaVariation]
       });
@@ -163,7 +164,20 @@ class TestManager {
           newText: ctaTexts[ctaVariation]
         });
       }
+
+      // Update all buttons with the class 'button' except the "Sign in" button
+      document.querySelectorAll('.button').forEach(button => {
+        if (!button.classList.contains('cpc') && button.textContent !== 'Sign in') {
+          const originalText = button.textContent;
+          button.textContent = ctaTexts[ctaVariation];
+          TrackManager.trackView('chargeperk-cta-text', ctaVariation, {
+            originalText,
+            newText: ctaTexts[ctaVariation]
+          });
+        }
+      });
     }
+
 
     // 4. Banner Message Test
     const bannerVariation = flags['chargeperk-banner-message'];
@@ -274,16 +288,14 @@ class TestManager {
 // Event Tracker
 class EventTracker {
   static init() {
-    if (isWebflowEditor()) return;
-
     document.addEventListener('click', (event) => {
       const target = event.target;
       const flags = window.ldclient?.allFlags() || {};
 
-      // Track CTA button clicks
-      if (target.id?.includes('chargeperk-cta-button')) {
+      // Track ALL CTA button clicks, excluding "Sign in" button
+      if (target.classList.contains('button') && !target.classList.contains('cpc') && target.textContent !== 'Sign in') {
         console.log('📊 Tracking CTA button click:', target.id, target.textContent);
-        TrackManager.trackCTAClick();
+        TrackManager.trackCTAClick(target.textContent, target.id);
         Object.entries(flags).forEach(([test, variation]) => {
           TrackManager.trackConversion(test, variation, {
             element: 'cta-button',
