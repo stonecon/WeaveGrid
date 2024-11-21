@@ -2,12 +2,12 @@ const LD_CONFIG = {
   clientId: '6026d6b36f9bd00b01ba8705', // Replace with your LaunchDarkly client-side ID
   debugEnabled: true,
   flags: {
-    'chargeperk-hero-headline': true, // Set to true by default to ensure the test runs
-    'chargeperk-hero-media': false,
+    'chargeperk-hero-headline': true,
+    'chargeperk-hero-media': true,
     'chargeperk-cta-text': 'A',
     'chargeperk-banner-message': 'A',
     'program-destination': 'A',
-    'section-layout': 'A'
+    'section-layout': true
   }
 };
 
@@ -117,13 +117,13 @@ class TestManager {
     console.log('🚩 Implementing Tests with Flags:', flags);
 
     // 1. Hero Headline Test
-    if (flags['chargeperk-hero-headline']) {
+    if (flags['chargeperk-hero-headline'] === false) {
       console.log('🔍 Hero Headline Flag Enabled, Applying Test');
       const result = this.updateElement('chargeperk-hero-headline', {
         text: 'Get $50 when you join ChargePerks'
       });
       if (result) {
-        TrackManager.trackView('chargeperk-hero-headline', true, {
+        TrackManager.trackView('chargeperk-hero-headline', false, {
           originalText: result.originalState.text,
           newText: 'Get $50 when you join ChargePerks'
         });
@@ -132,15 +132,21 @@ class TestManager {
       console.log('🔕 Hero Headline Flag Not Enabled');
     }
 
-    // 2. Hero Media Test
-    if (flags['chargeperk-hero-media']) {
-      this.updateElement('chargeperk-hero-image', {
-        style: { display: 'none' }
-      });
-      this.updateElement('chargeperk-hero-video', {
-        style: { display: 'block' }
-      });
-      TrackManager.trackView('chargeperk-hero-media', true, {
+    // 2. Hero Media Test classList.add('hide')
+    if (flags['chargeperk-hero-media'] === false) {
+      const imageElement = document.querySelector('#chargeperk-hero-image');
+      if (imageElement) {
+        imageElement.classList.add('hide');
+      }
+
+      // Show the video
+      const videoElement = document.querySelector('#chargeperk-hero-video');
+      if (videoElement) {
+        videoElement.classList.remove('hide');
+      }
+
+      // Track the view
+      TrackManager.trackView('chargeperk-hero-media', false, {
         showing: 'video'
       });
     }
@@ -178,7 +184,6 @@ class TestManager {
       });
     }
 
-
     // 4. Banner Message Test
     const bannerVariation = flags['chargeperk-banner-message'];
     if (bannerVariation !== 'A') {
@@ -201,7 +206,7 @@ class TestManager {
     }
 
     // 5. Program Links Destination Test
-    if (flags['program-destination'] === 'B') {
+    if (flags['program-destination'] === false) {
       const programLinks = {
         'Alabama Power': 'https://charge.weavegrid.com/alabamapower/',
         'Atlantic City Electric': 'https://charge.weavegrid.com/ace/',
@@ -232,7 +237,7 @@ class TestManager {
 
         if (result) {
           updatedLinks++;
-          TrackManager.trackView('program-destination', 'B', {
+          TrackManager.trackView('program-destination', false, {
             program: programId,
             originalUrl: result.originalState.attributes['href'],
             newUrl: newUrl
@@ -246,13 +251,12 @@ class TestManager {
     }
 
     // 6. Section Layout Test
-    if (flags['section-layout'] === 'B') {
+    if (flags['section-layout'] === false) {
       // Hide original sections
       ['1', '2'].forEach(num => {
-        const result = this.updateElement(`section-layout-${num}`, {
-          style: { display: 'none' }
-        });
-        if (result) {
+        const element = document.querySelector(`#section-layout-${num}`);
+        if (element) {
+          element.classList.add('hide');
           TrackManager.trackView('section-layout', 'B', {
             section: `section-layout-${num}`,
             action: 'hidden'
@@ -262,10 +266,9 @@ class TestManager {
 
       // Show reordered sections
       ['1', '2'].forEach(num => {
-        const result = this.updateElement(`section-reordered-${num}`, {
-          style: { display: 'block' }
-        });
-        if (result) {
+        const element = document.querySelector(`#section-reordered-${num}`);
+        if (element) {
+          element.classList.remove('hide');
           TrackManager.trackView('section-layout', 'B', {
             section: `section-reordered-${num}`,
             action: 'shown'
@@ -293,7 +296,8 @@ class EventTracker {
       const flags = window.ldclient?.allFlags() || {};
 
       // Track ALL CTA button clicks, excluding "Sign in" button
-      if (target.classList.contains('button') && !target.classList.contains('cpc') && target.textContent !== 'Sign in') {
+      if (target.classList.contains('button') && !target.classList.contains('cpc') && target
+        .textContent !== 'Sign in') {
         console.log('📊 Tracking CTA button click:', target.id, target.textContent);
         TrackManager.trackCTAClick(target.textContent, target.id);
         Object.entries(flags).forEach(([test, variation]) => {
@@ -350,11 +354,6 @@ window.initLDTests = async function () {
   console.group('🚀 Initializing LaunchDarkly Tests');
 
   try {
-    if (isWebflowEditor()) {
-      console.log('🎨 Running in Webflow Editor - A/B tests disabled');
-      return;
-    }
-
     // First, load the LaunchDarkly script
     await loadLaunchDarklyScript();
     console.log('📝 LaunchDarkly script loaded');
